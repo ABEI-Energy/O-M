@@ -1,0 +1,32 @@
+# No hay que indicar la unidad 
+{
+    dateTime: Enero 2024,
+    degTable: 2.95 %,
+    mtProdTable: 2345 kWh,
+    btProdTable: 12345 kWh,
+    mtAggTable: 12345 kWh,
+    copRadTable: 12345 Wh/m2,
+    mtAggcopFilRadTable: 12345 Wh/m2,
+    horRadTable : 123 kWh,
+    monthAvailTable : 234 %,
+    monthPunavLossEnTable RTable : 234 %,
+    monthPRTable : 234 %,
+    monthPRTable : 234 %,
+
+
+}
+
+
+Tables:
+
+flagT1 plantilla informe cliente
+*la primera fila hay que mantenerla ¿? O si no, incluirla en el df
+las columnas son:
+flagT1 se cambia por fecha
+fecha, SET y Total invs viene columnas A B y C de la pestaña tablas del documento plantilla informe cliente
+
+la columna PR viene de calculo PR Egrid.xlsx, hoja de calculos prod corr., columna w19 "PR nuevo" y la última celda de la tabla con los totales es la tabla amarilla seria la z22
+
+La columna de disponibilidad sle del excel de calculo de disponibilidad , hoja de calculo disp (corr)
+con la columna siendo la AJ12 para abajo, y el total viene de la N3 (merged, pouede que sea la O3 o la P3)
+
