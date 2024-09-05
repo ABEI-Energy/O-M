@@ -1,7 +1,6 @@
 import requests
 
 url = 'https://trujillo.bluence.com/rest'
-api_key = 'adsouifapo8udjrviummhmanpidg7niyprrttrq2'
 
 # Set up headers
 headers = {
