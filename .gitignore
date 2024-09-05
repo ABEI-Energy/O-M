@@ -212,3 +212,10 @@ trials/
 .nosync
 nosync/
 .nosync/
+
+
+
+# Resources/Bash
+.Resources/Bash
+Resources/Bash/
+.Resources/Bash/

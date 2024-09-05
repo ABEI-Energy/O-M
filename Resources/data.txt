@@ -1,0 +1,90 @@
+# No hay que indicar la unidad 
+{
+    dateTime: Enero 2024,
+    degTable: 2.95 %,
+    mtProdTable: 2345 kWh,
+    btProdTable: 12345 kWh,
+    mtAggTable: 12345 kWh,
+    copRadTable: 12345 Wh/m2,
+    mtAggcopFilRadTable: 12345 Wh/m2,
+    horRadTable : 12345 Wh/m2
+
+    monthPRTable : 234 %, 
+    monthPRTable : 234 %,
+
+
+}
+                                                    0                    1
+0                            Potencia pico instalada            49,98 MWp 
+1                          Fecha inicio contrato O&M   2022-01-01 00:00:00
+2                             Fecha inicio operación   2021-10-07 00:00:00
+3                                        Degradación              0.030356
+4   Producción mensual MT (medido en el contador d...              4974223
+5    Producción mensual BT (medido en inversor en AC)          5005963.321
+6   Producción acumulada MT (medido en el contador...            100504147
+7                                 Radiación coplanar            113197.827
+8                       Radiación coplanar  filtrada          110697.84325
+9                               Radiación horizontal             85020.446
+10                                        PR mensual                     0
+11                              PR acumulado (Año 1)              0.879787
+12                             PR mínimo garantizado                 0.864
+13                            Disponibilidad mensual                0.9987
+14                 Disponibilidad acumulada (Año  1)              0.994766
+15                Disponibilidad  mínima garantizada                  0.99
+16      Energía perdida estimada por indisponibilidad            6466.4899
+
+OJO CON QUE EL MES TENGA 30 O 31, PORQUE PROBABLEMENTE APAREZCAN DÍAS CON MESES CON VALORES DIV/0
+
+
+Tables:
+
+HACER LA FECHA UN INDICE PARA MÁS COMODIDAD
+
+flagT1 plantilla informe cliente
+*la primera fila hay que mantenerla ¿? O si no, incluirla en el df
+las columnas son:
+flagT1 se cambia por fecha
+fecha, SET y Total invs viene columnas A B y C de la pestaña tablas del documento plantilla informe cliente
+
+la columna PR viene de calculo PR Egrid.xlsx, hoja de calculos prod corr., columna w19 "PR nuevo" y la última celda de la tabla con los totales es la tabla amarilla seria la z22
+
+La columna de disponibilidad sle del excel de calculo de disponibilidad , hoja de calculo disp (corr)
+con la columna siendo la AJ12 para abajo, y el total viene de la N3 (merged, pouede que sea la O3 o la P3)
+
+   
+
+flagT2 Listado de inversores
+flagT2 se cambia por fecha
+
+Sale de plantilla cliente, de la hoja de Tablas, celda D4 hasta columna I
+
+
+
+flagT3 irradiación
+flagT3 se cambia por fecha
+
+Sale de plantilla cliente, de la hoja de tablas, celda B41 hasta columna H
+
+
+
+flagT4 temperaturas
+flagT4 se cambia por fecha
+
+Sale de plantilla cliente, de la hoja de tablas, celda I41 hasta columna N
+
+
+
+
+
+GRÁFICAS
+
+SET PRODUCTION (flagProductionSETFig): Sale de la columna SET (dfFlagT2 primera columna que no es fecha (col.SET))
+CTS PRODUCTION (flagProductionCTSFig): Sale de la columna SET (dfFlagT2 columnas de inversores individuales (col.invCTx))
+COPLANAR & HORIZONTAL RADIATION(flagProductionRadiationFig): Sale de la columna SET (dfFlagT2 columnas promedio coplanar y proyección horizontal (col.PromCop y col.ProyHor))
+
+TEMPERATURES (flagTemperaturesFig): Sale de dfFlagT4, las 6 columnas.
+
+PR MONTH (flagPRMonthFig): Sale de dfFlagT1, col.PR
+AVAILABILITY PR (flagAvailabilityFig): Sale de dfFlagT1, col.AVAILABILITY
+
+
