@@ -14,24 +14,7 @@
 
 
 }
-                                                    0                    1
-0                            Potencia pico instalada            49,98 MWp 
-1                          Fecha inicio contrato O&M   2022-01-01 00:00:00
-2                             Fecha inicio operación   2021-10-07 00:00:00
-3                                        Degradación              0.030356
-4   Producción mensual MT (medido en el contador d...              4974223
-5    Producción mensual BT (medido en inversor en AC)          5005963.321
-6   Producción acumulada MT (medido en el contador...            100504147
-7                                 Radiación coplanar            113197.827
-8                       Radiación coplanar  filtrada          110697.84325
-9                               Radiación horizontal             85020.446
-10                                        PR mensual                     0
-11                              PR acumulado (Año 1)              0.879787
-12                             PR mínimo garantizado                 0.864
-13                            Disponibilidad mensual                0.9987
-14                 Disponibilidad acumulada (Año  1)              0.994766
-15                Disponibilidad  mínima garantizada                  0.99
-16      Energía perdida estimada por indisponibilidad            6466.4899
+
 
 OJO CON QUE EL MES TENGA 30 O 31, PORQUE PROBABLEMENTE APAREZCAN DÍAS CON MESES CON VALORES DIV/0
 

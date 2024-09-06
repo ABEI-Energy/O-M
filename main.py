@@ -27,6 +27,8 @@ if 'finalCheck' not in st.session_state:
     st.session_state['calculo_pr'] = None
     st.session_state['calculo_disponibilidad'] = None
     st.session_state['calculo_plantilla'] = None
+    st.session_state['flag_T1_aux'] = None
+    st.session_state['flag_T1_aux2'] = None
     st.session_state['tablesDone'] = None
     st.session_state['wordsDone'] = None
     st.session_state['documentDone'] = None
@@ -59,23 +61,47 @@ colz, cola = st.columns(2)
 
 if uploadedFiles:
 
-    for uploadedFile in uploadedFiles:
+    # Ordenamos la entrada de los archivos en el bucle, porque si no está df
 
-        if uploadedFile.name.endswith('xlsm'):
+    uploadedFilesOrd = [None]*3
+    
+    for uploadedFile in uploadedFiles:
+        if 'plantilla' in uploadedFile.name.lower():
+            uploadedFilesOrd[0] = uploadedFile
+        elif 'pr' in uploadedFile.name.lower():
+            uploadedFilesOrd[1] = uploadedFile
+        elif 'disponibilidad' in uploadedFile.name.lower():
+            uploadedFilesOrd[2] = uploadedFile
+    
+    uploadedFiles = uploadedFilesOrd
+
+    for uploadedFile in uploadedFiles:
+        if uploadedFile is None:
+            next
+        elif ((uploadedFile.name.endswith('xlsm')) or (uploadedFile.name.endswith('xlsx'))):
 
             if 'plantilla' in uploadedFile.name.lower():
                 st.session_state['calculo_plantilla'] = True
                 excelPlantilla = uploadedFile
-                excel_reader(excelPlantilla)
+                df_flagT1_aux, df_flagT2, df_flagT3, df_flagT4, dict_portada = excel_reader(excelPlantilla)
 
-            elif 'disponibilidad' in uploadedFile.name.lower():
-                st.session_state['calculo_disponibilidad'] = None
+            elif ('disponibilidad' in uploadedFile.name.lower()) & (st.session_state.flag_T1_aux):
+                st.session_state['calculo_disponibilidad'] = True
                 excelDisponibilidad = uploadedFile
+                df_flagT1_aux = excel_reader(excelDisponibilidad, df_flagT1_aux)
 
-            elif 'pr' in uploadedFile.name.lower():
+            elif ('pr' in uploadedFile.name.lower()) & (st.session_state.flag_T1_aux2):
                 st.session_state['calculo_pr'] = True
                 excelPR = uploadedFile
+                val = excel_reader(excelPR, df_flagT1_aux)
 
+    else:
+        next
+
+
+if st.session_state.tablesDone:
+
+    pass
 '''
 
         elif uploadedFile.name.endswith('xlsx'):
