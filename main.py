@@ -7,6 +7,7 @@ from functions import *
 import streamlit_toggle as tog
 from docx.shared import Cm
 from zipfile import ZipFile
+import matplotlib.pyplot as plt
 
 if 'disable_opt' not in st.session_state:
     st.session_state.disable_opt = False
@@ -14,6 +15,12 @@ if 'disable_opt' not in st.session_state:
 #Set the language for datetime
 lc.setlocale(lc.LC_ALL,'es_ES.UTF-8')
 month = dt.datetime.now().strftime("%B %Y")
+
+class pict:
+    def __init__(self, name, file):
+        self.name = name
+        self.file = file
+
 def normalize(string):
     return str(round(float(string.replace(",", ".")),2))
 
@@ -29,10 +36,24 @@ if 'finalCheck' not in st.session_state:
     st.session_state['calculo_plantilla'] = None
     st.session_state['flag_T1_aux'] = None
     st.session_state['flag_T1_aux2'] = None
+    st.session_state['create_document'] = None
+    st.session_state['flagZip'] = None
+    st.session_state['picsDone'] = None
     st.session_state['tablesDone'] = None
     st.session_state['wordsDone'] = None
     st.session_state['documentDone'] = None
     st.session_state['tablerDone'] = None
+    st.session_state['days'] = 0
+    st.session_state['month'] = None
+    st.session_state['generarDocumento'] = None
+
+    st.session_state.visibility = 'visible'
+
+
+    # st.session_state['plantilla'] = False
+    # st.session_state['disponibilidad'] = False
+    # st.session_state['pr'] = False
+
 
 """
 # O&M doc maker
@@ -57,6 +78,11 @@ with coly:
             mime="application/zip"
         )
 
+    accum_PR1 = st.text_input("PR acumulado (Año 1)", label_visibility=st.session_state.visibility)
+    avail_accum_1 = st.text_input("Disponibilidad acumulada (Año 1)", label_visibility=st.session_state.visibility)
+    unavEnergLoss = st.text_input("Energía perdida estimada por indisponibilidad", label_visibility=st.session_state.visibility)
+
+
 colz, cola = st.columns(2)
 
 if uploadedFiles:
@@ -68,223 +94,193 @@ if uploadedFiles:
     for uploadedFile in uploadedFiles:
         if 'plantilla' in uploadedFile.name.lower():
             uploadedFilesOrd[0] = uploadedFile
-        elif 'pr' in uploadedFile.name.lower():
-            uploadedFilesOrd[1] = uploadedFile
         elif 'disponibilidad' in uploadedFile.name.lower():
+            uploadedFilesOrd[1] = uploadedFile
+        elif 'pr' in uploadedFile.name.lower():
             uploadedFilesOrd[2] = uploadedFile
-    
+
     uploadedFiles = uploadedFilesOrd
 
     for uploadedFile in uploadedFiles:
+
         if uploadedFile is None:
             next
         elif ((uploadedFile.name.endswith('xlsm')) or (uploadedFile.name.endswith('xlsx'))):
-
-            if 'plantilla' in uploadedFile.name.lower():
+        
+            if ('plantilla' in uploadedFile.name.lower()):#& (st.session_state.plantilla == False)
                 st.session_state['calculo_plantilla'] = True
                 excelPlantilla = uploadedFile
                 df_flagT1_aux, df_flagT2, df_flagT3, df_flagT4, dict_portada = excel_reader(excelPlantilla)
 
-            elif ('disponibilidad' in uploadedFile.name.lower()) & (st.session_state.flag_T1_aux):
+            elif ('disponibilidad' in uploadedFile.name.lower()) & (st.session_state.flag_T1_aux):#& (st.session_state.disponibilidad == False)
                 st.session_state['calculo_disponibilidad'] = True
                 excelDisponibilidad = uploadedFile
                 df_flagT1_aux = excel_reader(excelDisponibilidad, df_flagT1_aux)
 
-            elif ('pr' in uploadedFile.name.lower()) & (st.session_state.flag_T1_aux2):
+            elif ('pr' in uploadedFile.name.lower()) & (st.session_state.flag_T1_aux2): # & (st.session_state.pr == False)
                 st.session_state['calculo_pr'] = True
                 excelPR = uploadedFile
-                val = excel_reader(excelPR, df_flagT1_aux)
-
+                df_flagT1 = excel_reader(excelPR, df_flagT1_aux)
     else:
         next
 
+    # Edit and round(2) the float numbers
 
-if st.session_state.tablesDone:
+    df_flagT1.iloc[:,1:] = df_flagT1.iloc[:,1:].astype(float).round(2)
+    df_flagT2.iloc[:,1:] = df_flagT2.iloc[:,1:].astype(float).round(2)
+    df_flagT3.iloc[:,1:] = df_flagT3.iloc[:,1:].astype(float).round(2)
+    df_flagT4.iloc[:,1:] = df_flagT4.iloc[:,1:].astype(float).round(2)
 
-    pass
-'''
+    dict_portada.update({'accumPR1':accum_PR1})
+    dict_portada.update({'monthAcc1':avail_accum_1})
+    dict_portada.update({'unavEnergLoss':unavEnergLoss})
 
-        elif uploadedFile.name.endswith('xlsx'):
+    for elem in dict_portada:
+        if type(dict_portada[elem]) != str:
+            dict_portada[elem] = round(dict_portada[elem],3)
 
-            df_power, df_thrust = model_reader(uploadedFile)
+if st.session_state.tablesDone and uploadedFiles:
 
-            fig, ax = plt.subplots()
-            ax.plot(df_power['Wind Speed'], df_power['1.225'])
-            ax.set_xlabel('Wind Speed (m/s)')
-            ax.set_ylabel('Power (kW) @ air 1.225 kg/m3')
-            ax.set_title('Power curve')
+    picDict = {}
 
-            fig_io = io.BytesIO()
-            fig.savefig(fig_io, format = 'png')
-            fig_io.seek(0)
+    # SET Production
 
-            picDict[pict('powerCurvePic', fig_io).name] = pict(uploadedFile.name, fig_io).file
+    fig_SET_prod, ax = plt.subplots(figsize=(15, 6))
+    ax.plot(df_flagT1['Fecha'].iloc[:-1],df_flagT1['SET'].iloc[:-1])
+    ax.set_xlabel('Día')
+    ax.set_ylabel('Producción SET (kWh)')
+    ax.set_title('Producción SET (kWh)')
+    
+    plt.xticks(df_flagT1['Fecha'].iloc[:-1].astype(float))
 
-            # In case we want to show the turbine
-            # st.image(fig_io)
-
-            # st.pyplot(fig)
-
-        elif uploadedFile.name.endswith('png'):
-
-            if 'layout' in uploadedFile.name.lower():
-                layoutPic = uploadedFile
-                picDict[pict('layout', layoutPic).name] = pict('layout', layoutPic).file
-
-            elif 'location' in uploadedFile.name.lower():
-                locationPic = uploadedFile
-                picDict[pict('location', locationPic).name] = pict('location', locationPic).file
-
-            elif 'wind resource' in uploadedFile.name.lower():
-                wrPic = uploadedFile
-                picDict[pict('wind resource', wrPic).name] = pict('wind resource', wrPic).file
-
-            elif 'turbulence' in uploadedFile.name.lower():
-                turbulencePic = uploadedFile
-                picDict[pict('turbulence', turbulencePic).name] = pict('turbulence', turbulencePic).file
+    fig_io_SET_prod = io.BytesIO()
+    fig_SET_prod.savefig(fig_io_SET_prod, format = 'png')
+    fig_io_SET_prod.seek(0)
+    
+    picDict[pict('SetProduction', fig_io_SET_prod).name] = pict(uploadedFile.name, fig_io_SET_prod).file
 
 
+    # CTS Production
+
+    fig_CTS_prod, ax = plt.subplots(figsize=(15, 6))
+    ax.plot(df_flagT2.iloc[:-1])
+    ax.set_xlabel('Día')
+    ax.set_ylabel('Producción CTs (kWh)')
+    ax.set_title('Producción CTs (kWh)')
+    plt.xticks(df_flagT1['Fecha'].iloc[:-1].astype(float))
+    ax.legend(df_flagT2.columns)
+
+    fig_io_CTS_prod = io.BytesIO()
+    fig_CTS_prod.savefig(fig_io_CTS_prod, format = 'png')
+    fig_io_CTS_prod.seek(0)
+    
+    picDict[pict('CTSProduction', fig_io_CTS_prod).name] = pict(uploadedFile.name, fig_io_CTS_prod).file
 
 
+    # Coplanar & Horizontal radiation
+
+    fig_Coplanar_Horiz_rad, ax = plt.subplots(figsize=(15, 6))
+    df_T3_aux = df_flagT3.iloc[:-1,[0,5,6]]
+    ax.plot(df_T3_aux['Fecha'],df_T3_aux.iloc[:,1:])
+    ax.set_xlabel('Día')
+    ax.set_ylabel('Radiación Coplanar y Horizontal (Wh/(m$^2$))')
+    ax.set_title('Radiación Coplanar y Horizontal (Wh/(m$^2$))')
+    plt.xticks(df_T3_aux['Fecha'].astype(float))
+    ax.legend(df_T3_aux.columns[1:])
+
+    fig_io_Coplanar_Horiz_rad = io.BytesIO()
+    fig_Coplanar_Horiz_rad.savefig(fig_io_Coplanar_Horiz_rad, format = 'png')
+    fig_io_Coplanar_Horiz_rad.seek(0)
+    
+    picDict[pict('CopHorizRadiation', fig_io_Coplanar_Horiz_rad).name] = pict(uploadedFile.name, fig_io_Coplanar_Horiz_rad).file   
 
 
-        # st.cache_data
-    if uploadedFile.name.endswith('csv'):
+    # Temperatures
 
-        df_stateless, df_statefull, df_stateless_countiless, df_full = fn.df_adequacy(uploadedFile)
-        #@todo hay algunos que tienen county pero no state, hay que pensar cómo llenarlos.
-        df, flag_adequacy = mp.locator_json(df_stateless, df_statefull, df_stateless_countiless, df_full, rootShp)
+    fig_Temperatures, ax = plt.subplots(figsize=(15, 6))
+    df_T4_aux = pd.concat([df_flagT3['Fecha'],df_flagT4], axis = 1) #ya está cortada para que no coja la última
+    df_T4_aux.reset_index(inplace = True, drop = True)
+    df_T4_aux = df_T4_aux.iloc[:-1]
+    ax.plot(df_T4_aux['Fecha'],df_T4_aux.iloc[:,1:])
+    ax.set_xlabel('Día')
+    ax.set_ylabel('Temperatura (°C)')
+    ax.set_title('Temperatura (°C)')
+    plt.xticks(df_T4_aux['Fecha'].astype(float))
+    ax.legend(df_T4_aux.columns[1:])
 
-        df.reset_index(inplace = True, drop = True)
+    fig_io_Temperatures = io.BytesIO()
+    fig_Temperatures.savefig(fig_io_Temperatures, format = 'png')
+    fig_io_Temperatures.seek(0)
+    
+    picDict[pict('Temperatures', fig_io_Temperatures).name] = pict(uploadedFile.name, fig_io_Temperatures).file   
 
-        if flag_adequacy:
+    
+    # PR
 
-            col1, col2, col3, col4 = st.columns(4)
-            state = period = ISO = priceType = str()
+    fig_PR, ax = plt.subplots(figsize=(15, 6))
+    ax.plot(df_flagT1['Fecha'].iloc[:-1], df_flagT1.iloc[:-1,-1])
+    ax.set_xlabel('Día')
+    ax.set_ylabel(f'PR {st.session_state.month}')
+    ax.set_title(f'PR {st.session_state.month}')
+    plt.xticks(df_flagT1['Fecha'].iloc[:-1].astype(float))
 
-            with col1:
-                select_all_state = st.checkbox('Select all states')
-                state_key = 'state_' + str(select_all_state)
-                if not select_all_state:
-                    state = st.multiselect('Select state:', sorted(df['State'].unique()), key = state_key)
-                else:
-                    state = df['State'].unique().tolist()
-
-            with col2:
-                if state:
-                    select_all_ISO = st.checkbox('Select all ISOs')
-                    iso_key = 'iso_' + str(select_all_ISO)
-                    if not select_all_ISO:
-                        ISO = st.multiselect('Select ISO:', df.loc[df['State'].isin(state), 'ISO'].unique(), key = iso_key)
-                    else:
-                        ISO = df.loc[df['State'].isin(state), 'ISO'].unique().tolist()
-
-            with col3:
-                if state:
-                    select_all_period = st.checkbox('Select all periods')
-                    period_key = 'period_' + str(select_all_period)
-                    if not select_all_period:
-                        period = st.multiselect('Select period:', df.loc[df['State'].isin(state), 'Period From'].unique(), key = period_key)
-                    else:
-                        period = df.loc[df['State'].isin(state), 'Period From'].unique().tolist()
-
-            with col4:
-                if state:
-                    select_all_priceType = st.checkbox('Select all price types')
-                    price_key = 'price_' + str(select_all_priceType)
-                    if not select_all_priceType:
-                        priceType = st.multiselect('Select price type:', df.loc[df['State'].isin(state), 'Price type'].unique(), key = price_key)
-                    else:
-                        priceType = df.loc[df['State'].isin(state), 'Price type'].unique().tolist()   
-
-        if (len(period)!=0) and (len(ISO)!=0) and (len(state)!=0) and (len(priceType)!=0):
-
-            filtered_df, df_indexed = fn.filter_df(df,period,ISO, state, priceType)
-
-            html_to_show_spread = mp.html_display_spread(filtered_df)
-            html_to_show_indexed = mp.html_display_indexed(df_indexed)
-            colb, colc = st.columns(2)
+    fig_io_PR = io.BytesIO()
+    fig_PR.savefig(fig_io_PR, format = 'png')
+    fig_io_PR.seek(0)
+    
+    picDict[pict('PR', fig_io_PR).name] = pict(uploadedFile.name, fig_io_PR).file
 
 
-            st.caption('LMP Hot Spot heatmap')
+    # Availability
 
-            html_to_show_indexed = mp.html_display_indexed(df_indexed)
-            st.write(html_to_show_indexed)
+    fig_Availability, ax = plt.subplots(figsize=(15, 6))
+    ax.plot(df_flagT1['Fecha'].iloc[:-1], df_flagT1.iloc[:-1,-2])
+    ax.set_xlabel('Día')
+    ax.set_ylabel(f'Disponibilidad {st.session_state.month}')
+    ax.set_title(f'Disponibilidad {st.session_state.month}')
+    plt.xticks(df_flagT1['Fecha'].iloc[:-1].astype(float))
 
-            obj_html_io_indexed = io.StringIO()
-            html_to_show_indexed.write_html(obj_html_io_indexed)
-            obj_html_io_indexed.seek(0)
+    fig_io_Availability = io.BytesIO()
+    fig_Availability.savefig(fig_io_Availability, format = 'png')
+    fig_io_Availability.seek(0)
+    
+    picDict[pict('Availability', fig_io_Availability).name] = pict(uploadedFile.name, fig_io_Availability).file
 
+    # We got everything ready to implement in the document
+    st.session_state.create_document = True
 
-            st.caption('Average Max - Min Daily LMP Spread heatmap')
+if st.session_state.create_document and uploadedFiles:
+    
+    st.button("Generar documento", key = 'generarDocumento')
+    doc_file = duplicateDoc()
 
-            html_to_show_spread = mp.html_display_spread(filtered_df)
-            st.write(html_to_show_spread)
+if st.session_state.generarDocumento:
 
-            obj_html_io_spread = io.StringIO()
-            html_to_show_spread.write_html(obj_html_io_spread)
-            obj_html_io_spread.seek(0)
+    with st.status("Preparando archivo", expanded=True) as status:
 
-            flag_createFile = st.button("Generate zip file")
-            flagZip = False
+        # st.write("Generando documento word")
+        nameWord = 'Informe Cliente'+ " Cartuja" + ".doc"
 
-            if flag_createFile:
+        insert_image_in_cell(doc_file, picDict)
+        docWriter(doc_file, dict_portada)
+        docTabler(doc_file, df_flagT1, df_flagT2, df_flagT3, df_flagT4)
+        doc_modelo_bio = io.BytesIO()
+        doc_file.save(doc_modelo_bio)
+        doc_modelo_bio.seek(0)
+        if st.session_state.picsDone and st.session_state.wordsDone and st.session_state.tablesDone and st.session_state.tablerDone: 
+            st.session_state.documentDone = True
+            st.session_state.picsDone = False
+            st.session_state.wordsDone = False
+            st.session_state.tablesDone = False
+            st.session_state.tablerDone = False
 
-                with st.status("Generating file", expanded=True) as status:
-                    st.write("Preparing kml")
-
-                    nameZip = 'Enverus ' + str(state) + " " + str(ISO) + " " + str(period) + " " + str(priceType) + " " + ".zip"
-                    zip_data = io.BytesIO()
-
-                    # We create the kml file
-                    flagKml, kml_string = kml.kmlMaker(filtered_df)
-                    obj_kml_io = io.StringIO(kml_string)
-                    obj_kml_io.seek(0)      
-
-
-                    st.write("Preparing xlsx")
-
-                    # We create the xlsx
-                    excel_io = io.BytesIO()
-                    writer = pd.ExcelWriter(excel_io, engine = 'xlsxwriter')
-                    excel_io.seek(0)
-                    filtered_df.to_excel(writer, sheet_name = 'Nodes', index = False)
-                    writer.close()
-                    excel_io.seek(0)
-
-
-                    st.write("Preparing zip")
-
-                    # Create a ZipFile Object
-                    with ZipFile(zip_data, 'w') as zipf:
-                       # Adding files that need to be zipped
-                        zipf.writestr("Heatmap spread value.html",obj_html_io_spread.getvalue())
-                        zipf.writestr("Heatmap indexed.html",obj_html_io_indexed.getvalue())
-                        zipf.writestr("Node spread.kml",obj_kml_io.getvalue())
-                        zipf.writestr("Node spread.xlsx",excel_io.getvalue())
-
-                        flagZip = True
-
-
-                    status.update(label="File completed")
-
-                    
-
-
-
-
-
-            
-            if flagZip and flagKml:
-                st.success('Download the report file')
-                btn = st.download_button(
-                    label="Download",
-                    data=zip_data.getvalue(),
-                    file_name=nameZip,
-                    mime="application/zip"
-                )                
-
-
-        pass
-
-'''
+        status.update(label="Archivo completado")
+  
+if st.session_state.documentDone:
+    btn = st.download_button(
+            label="Descarga archivos",
+            data=doc_modelo_bio,
+            file_name=nameWord,
+            mime="application/docx"
+        )
+    st.session_state.documentDone = False

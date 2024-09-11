@@ -61,7 +61,7 @@ Sale de plantilla cliente, de la hoja de tablas, celda I41 hasta columna N
 
 GRÁFICAS
 
-SET PRODUCTION (flagProductionSETFig): Sale de la columna SET (dfFlagT2 primera columna que no es fecha (col.SET))
+SET PRODUCTION (flagProductionSETFig): Sale de la columna SET (dfFlagT1 primera columna que no es fecha (col.SET))
 CTS PRODUCTION (flagProductionCTSFig): Sale de la columna SET (dfFlagT2 columnas de inversores individuales (col.invCTx))
 COPLANAR & HORIZONTAL RADIATION(flagProductionRadiationFig): Sale de la columna SET (dfFlagT2 columnas promedio coplanar y proyección horizontal (col.PromCop y col.ProyHor))
 
