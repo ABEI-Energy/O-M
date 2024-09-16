@@ -47,6 +47,10 @@ if 'finalCheck' not in st.session_state:
     st.session_state['month'] = None
     st.session_state['generarDocumento'] = None
 
+    st.session_state['accum_PR1'] = None
+    st.session_state['avail_accum_1'] = None
+    st.session_state['unavEnergLoss'] = None
+
     st.session_state.visibility = 'visible'
 
 
@@ -78,14 +82,14 @@ with coly:
             mime="application/zip"
         )
 
-    accum_PR1 = st.text_input("PR acumulado (Año 1)", label_visibility=st.session_state.visibility)
-    avail_accum_1 = st.text_input("Disponibilidad acumulada (Año 1)", label_visibility=st.session_state.visibility)
-    unavEnergLoss = st.text_input("Energía perdida estimada por indisponibilidad", label_visibility=st.session_state.visibility)
+    accum_PR1 = st.text_input("PR acumulado (Año 1)", label_visibility=st.session_state.visibility, key = 'accum_PR1')
+    avail_accum_1 = st.text_input("Disponibilidad acumulada (Año 1)", label_visibility=st.session_state.visibility, key = 'avail_accum_1')
+    unavEnergLoss = st.text_input("Energía perdida estimada por indisponibilidad", label_visibility=st.session_state.visibility, key = 'unavEnergLoss')
 
 
 colz, cola = st.columns(2)
 
-if uploadedFiles:
+if uploadedFiles and st.session_state.accum_PR1 and st.session_state.avail_accum_1 and st.session_state.unavEnergLoss:
 
     # Ordenamos la entrada de los archivos en el bucle, porque si no está df
 
@@ -168,7 +172,7 @@ if st.session_state.tablesDone and uploadedFiles:
     ax.set_ylabel('Producción CTs (kWh)')
     ax.set_title('Producción CTs (kWh)')
     plt.xticks(df_flagT1['Fecha'].iloc[:-1].astype(float))
-    ax.legend(df_flagT2.columns)
+    ax.legend(df_flagT2.columns[1:])
 
     fig_io_CTS_prod = io.BytesIO()
     fig_CTS_prod.savefig(fig_io_CTS_prod, format = 'png')
@@ -198,7 +202,8 @@ if st.session_state.tablesDone and uploadedFiles:
     # Temperatures
 
     fig_Temperatures, ax = plt.subplots(figsize=(15, 6))
-    df_T4_aux = pd.concat([df_flagT3['Fecha'],df_flagT4], axis = 1) #ya está cortada para que no coja la última
+    # df_T4_aux = pd.concat([df_flagT3['Fecha'],df_flagT4], axis = 1) #ya está cortada para que no coja la última
+    df_T4_aux = df_flagT4 #ya está cortada para que no coja la última
     df_T4_aux.reset_index(inplace = True, drop = True)
     df_T4_aux = df_T4_aux.iloc[:-1]
     ax.plot(df_T4_aux['Fecha'],df_T4_aux.iloc[:,1:])

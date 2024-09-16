@@ -87,6 +87,7 @@ def excel_reader(directory, df_aux = None):
         df_flagT2.columns = cols_ct
         df_flagT2.name = 'CTs.'
 
+        df_flagT2 = pd.concat([df_flagT1_aux['Fecha'],df_flagT2], axis = 1)
 
         # flagT3 inversores
         df_flagT3 = df_portada
@@ -108,6 +109,9 @@ def excel_reader(directory, df_aux = None):
         df_flagT4.reset_index(inplace = True, drop = True)
         df_flagT4.columns = cols_temp
         df_flagT4.name = 'Temp.'
+
+        df_flagT4 = pd.concat([df_flagT1_aux['Fecha'],df_flagT4], axis = 1)
+
 
         st.session_state.calculo_plantilla = False
         st.session_state.plantilla = True
@@ -298,21 +302,20 @@ def docWriter(docxFile,docxDict):
                                 paragraph.text = paragraph.text.replace(word,str(docxDict[word]))
                                 paragraph.style = docxFile.styles['headerStyle1'] 
 
-
     for table in docxFile.tables:
         for row in table.rows:
             for cell in row.cells:
                 for paragraph in cell.paragraphs:
                     previousStyle = docxFile.styles['tablePortada']
+            
                     for word in docxDict:
                         if word in paragraph.text:
                             previousStyle = paragraph.style.name
                             paragraph.text = paragraph.text.replace(word,str(docxDict[word]))
                             paragraph.style = docxFile.styles[previousStyle]   
                             table.style = docxFile.styles['tablePortadas']
-
     
-        #Resto del documento
+    #Resto del documento
     for paragraph in docxFile.paragraphs:
         for word in docxDict:
             if word in paragraph.text:
@@ -320,65 +323,78 @@ def docWriter(docxFile,docxDict):
                 paragraph.text = paragraph.text.replace(word,str(docxDict[word]))
                 paragraph.style = docxFile.styles[previousStyle] 
 
-
     st.session_state.wordsDone = True
     st.session_state.tablesDone = True
 
 def docTabler(docxFile, df_flagT1, df_flagT2, df_flagT3, df_flagT4):
+
     for table in docxFile.tables:
         for row in table.rows:
             for cell in row.cells:
                 if "flagT1" in cell.text:
                     cell.text = "Fecha"
+                    cell.paragraphs[0].style  = docxFile.styles['tableVal']
                     for i in range(len(df_flagT1)):
                         table.add_row()
-                        # table.style = 'tableOrange1'
 
                     for i in range(df_flagT1.shape[0]):
                         for j in range(df_flagT1.shape[-1]):
                             table.cell(i+1,j).paragraphs[0].text = str(df_flagT1.values[i,j])
+                            table.cell(i+1,j).paragraphs[0].style = docxFile.styles['tableVal']
 
-                    table.style = 'tableOrange1'
+                    for col in table.columns:
+                        col.width = Cm(2)
+
+                    continue
 
                 if "flagT2" in cell.text:
-                    cellStyle = cell.paragraphs[0].style.name
                     cell.text = "Fecha"
+                    cell.paragraphs[0].style = docxFile.styles['tableVal']
                     for i in range(len(df_flagT2)):
                         table.add_row()
-                        # table.style = 'tableOrange1'
 
                     for i in range(df_flagT2.shape[0]):
                         for j in range(df_flagT2.shape[-1]):
                             table.cell(i+1,j).paragraphs[0].text = str(df_flagT2.values[i,j])
+                            table.cell(i+1,j).paragraphs[0].style = docxFile.styles['tableVal']
 
-                    table.style = 'tableOrange1'
+                    for col in table.columns:
+                        col.width = Cm(1.65)
+
+                    continue
+
 
                 if "flagT3" in cell.text:
-                    cellStyle = cell.paragraphs[0].style.name
                     cell.text = "Fecha"
+                    cell.paragraphs[0].style = docxFile.styles['tableVal']
                     for i in range(len(df_flagT3)):
                         table.add_row()
-                        # table.style = 'tableOrange1'
 
                     for i in range(df_flagT3.shape[0]):
                         for j in range(df_flagT3.shape[-1]):
                             table.cell(i+1,j).paragraphs[0].text = str(df_flagT3.values[i,j])
+                            table.cell(i+1,j).paragraphs[0].style = docxFile.styles['tableVal']
+            
+                    for col in table.columns:
+                        col.width = Cm(1.7)
 
-                    table.style = 'tableOrange1'
+                    continue
 
                 if "flagT4" in cell.text:
-                    cellStyle = cell.paragraphs[0].style.name
                     cell.text = "Fecha"
+                    cell.paragraphs[0].style = docxFile.styles['tableVal']
                     for i in range(len(df_flagT4)):
                         table.add_row()
-                        # table.style = 'tableOrange1'
 
                     for i in range(df_flagT4.shape[0]):
                         for j in range(df_flagT4.shape[-1]):
                             table.cell(i+1,j).paragraphs[0].text = str(df_flagT4.values[i,j])
+                            table.cell(i+1,j).paragraphs[0].style = docxFile.styles['tableVal']
 
-                    table.style = 'tableOrange1'
+                    for col in table.columns:
+                        col.width = Cm(1.9)
 
+                    continue
 
 
     st.session_state.tablerDone = True
