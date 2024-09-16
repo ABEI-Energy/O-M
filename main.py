@@ -15,6 +15,7 @@ if 'disable_opt' not in st.session_state:
 #Set the language for datetime
 lc.setlocale(lc.LC_ALL,'es_ES.UTF-8')
 month = dt.datetime.now().strftime("%B %Y")
+time_doc = dt.datetime.now().strftime("%y%m")
 
 class pict:
     def __init__(self, name, file):
@@ -263,13 +264,17 @@ if st.session_state.generarDocumento:
 
     with st.status("Preparando archivo", expanded=True) as status:
 
-        # st.write("Generando documento word")
-        nameWord = 'Informe Cliente'+ " Cartuja" + ".doc"
+        nameWord = time_doc + ' - Informe Cliente'+ " PSFV Cartuja" + ".doc"
+        st.write("Preparando gráficas")
 
         insert_image_in_cell(doc_file, picDict)
+
+        st.write('Preparando tablas')
         docWriter(doc_file, dict_portada)
         docTabler(doc_file, df_flagT1, df_flagT2, df_flagT3, df_flagT4)
         doc_modelo_bio = io.BytesIO()
+
+        st.write("Guardando archivo")
         doc_file.save(doc_modelo_bio)
         doc_modelo_bio.seek(0)
         if st.session_state.picsDone and st.session_state.wordsDone and st.session_state.tablesDone and st.session_state.tablerDone: 
