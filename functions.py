@@ -102,7 +102,8 @@ def excel_reader(directory, df_aux = None):
 
         # flagT4 temperatura
         df_flagT4 = df_portada
-        cols_temp = df_flagT4.iloc[(end_tables[0]+2),8:]
+        cols_temp = ['Temp Amb MAX', 'Temp Amb MED', 'Temp Amb MIN', 'Temp Panel MAX', 'Temp Panel MED', 'Temp Panel MIN']
+
 
         df_flagT4 = df_flagT4.iloc[:,8:] # Columnas
         df_flagT4 = df_flagT4.iloc[(end_tables[0]+6):(end_tables[1]+1)] # Filas

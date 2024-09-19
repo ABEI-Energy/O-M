@@ -212,12 +212,14 @@ if st.session_state.tablesDone and uploadedFiles:
     ax.set_ylabel('Temperatura (°C)')
     ax.set_title('Temperatura (°C)')
     plt.xticks(df_T4_aux['Fecha'].astype(float))
-    ax.legend(df_T4_aux.columns[1:])
+    ax.legend(df_T4_aux.columns[1:] )
+
 
     fig_io_Temperatures = io.BytesIO()
     fig_Temperatures.savefig(fig_io_Temperatures, format = 'png')
     fig_io_Temperatures.seek(0)
     
+
     picDict[pict('Temperatures', fig_io_Temperatures).name] = pict(uploadedFile.name, fig_io_Temperatures).file   
 
     
